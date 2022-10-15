@@ -1720,7 +1720,7 @@ public class Loan extends AbstractPersistableCustom {
 
     private void recalculateLoanCharge(final LoanCharge loanCharge, final int penaltyWaitPeriod) {
         BigDecimal amount = BigDecimal.ZERO;
-        BigDecimal chargeAmt = BigDecimal.ZERO;
+        BigDecimal chargeAmt;
         BigDecimal totalChargeAmt = BigDecimal.ZERO;
         if (loanCharge.getChargeCalculation().isPercentageBased()) {
             if (loanCharge.isOverdueInstallmentCharge()) {
@@ -4992,6 +4992,7 @@ public class Loan extends AbstractPersistableCustom {
         return loanCharges;
     }
 
+    // compute an installment charge per each installment for given charge
     public List<LoanInstallmentCharge> generateInstallmentLoanCharges(final LoanCharge loanCharge) {
         final List<LoanInstallmentCharge> loanChargePerInstallments = new ArrayList<>();
         if (loanCharge.isInstalmentFee()) {
@@ -5000,13 +5001,11 @@ public class Loan extends AbstractPersistableCustom {
                 if (installment.isRecalculatedInterestComponent()) {
                     continue;
                 }
-                BigDecimal amount = BigDecimal.ZERO;
-                if (loanCharge.getChargeCalculation().isFlat()) {
-                    amount = loanCharge.amountOrPercentage();
-                } else {
-                    amount = calculateInstallmentChargeAmount(loanCharge.getChargeCalculation(), loanCharge.getPercentage(), installment)
+                BigDecimal amount = loanCharge.getChargeCalculation().isFlat()
+                    ? loanCharge.amountOrPercentage()
+                    : calculateInstallmentChargeAmount(loanCharge.getChargeCalculation(), loanCharge.getPercentage(), installment)
                             .getAmount();
-                }
+
                 final LoanInstallmentCharge loanInstallmentCharge = new LoanInstallmentCharge(amount, loanCharge, installment);
                 installment.getInstallmentCharges().add(loanInstallmentCharge);
                 loanChargePerInstallments.add(loanInstallmentCharge);
@@ -6886,5 +6885,4 @@ public class Loan extends AbstractPersistableCustom {
     public void adjustNetDisbursalAmount(BigDecimal adjustedAmount) {
         this.netDisbursalAmount = adjustedAmount.subtract(this.deriveSumTotalOfChargesDueAtDisbursement());
     }
-
 }
