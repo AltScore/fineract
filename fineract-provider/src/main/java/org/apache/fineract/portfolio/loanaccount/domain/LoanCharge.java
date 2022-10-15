@@ -24,7 +24,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -535,34 +534,16 @@ public class LoanCharge extends AbstractPersistableCustom {
     }
 
     private void updateInstallmentCharges() {
-        final Collection<LoanInstallmentCharge> remove = new HashSet<>();
         final List<LoanInstallmentCharge> newChargeInstallments = this.loan.generateInstallmentLoanCharges(this);
-        if (this.loanInstallmentCharge.isEmpty()) {
-            this.loanInstallmentCharge.addAll(newChargeInstallments);
-        } else {
-            int index = 0;
-            final List<LoanInstallmentCharge> oldChargeInstallments = new ArrayList<>();
-            if (this.loanInstallmentCharge != null && !this.loanInstallmentCharge.isEmpty()) {
-                oldChargeInstallments.addAll(this.loanInstallmentCharge);
-            }
-            Collections.sort(oldChargeInstallments);
-            final LoanInstallmentCharge[] loanChargePerInstallmentArray = newChargeInstallments
-                    .toArray(new LoanInstallmentCharge[newChargeInstallments.size()]);
-            for (final LoanInstallmentCharge chargePerInstallment : oldChargeInstallments) {
-                if (index == loanChargePerInstallmentArray.length) {
-                    remove.add(chargePerInstallment);
-                    chargePerInstallment.getInstallment().getInstallmentCharges().remove(chargePerInstallment);
-                } else {
-                    LoanInstallmentCharge newLoanInstallmentCharge = loanChargePerInstallmentArray[index++];
-                    newLoanInstallmentCharge.getInstallment().getInstallmentCharges().remove(newLoanInstallmentCharge);
-                    chargePerInstallment.copyFrom(newLoanInstallmentCharge);
-                }
-            }
-            this.loanInstallmentCharge.removeAll(remove);
-            while (index < loanChargePerInstallmentArray.length) {
-                this.loanInstallmentCharge.add(loanChargePerInstallmentArray[index++]);
-            }
+
+        for (LoanInstallmentCharge oldChargeInstallment : this.loanInstallmentCharge) {
+            oldChargeInstallment.getInstallment().getInstallmentCharges().remove(oldChargeInstallment);
         }
+        this.loanInstallmentCharge.clear();
+
+        // Add additional new LoanInstallmentCharges
+        this.loanInstallmentCharge.addAll(newChargeInstallments);
+
         Money amount = Money.zero(this.loan.getCurrency());
         for (LoanInstallmentCharge charge : this.loanInstallmentCharge) {
             amount = amount.plus(charge.getAmount());
@@ -782,7 +763,8 @@ public class LoanCharge extends AbstractPersistableCustom {
         Money processAmount = Money.zero(incrementBy.getCurrency());
         if (isInstalmentFee()) {
             if (installmentNumber == null) {
-                processAmount = getUnpaidInstallmentLoanCharge().updatePaidAmountBy(incrementBy, feeAmount);
+                LoanInstallmentCharge unpaidInstallmentLoanCharge = getUnpaidInstallmentLoanCharge();
+                processAmount = unpaidInstallmentLoanCharge.updatePaidAmountBy(incrementBy, feeAmount);
             } else {
                 processAmount = getInstallmentLoanCharge(installmentNumber).updatePaidAmountBy(incrementBy, feeAmount);
             }
