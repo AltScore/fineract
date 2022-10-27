@@ -107,7 +107,7 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
                 jobDetails.updateTriggerMisfired(false);
                 this.schedularWritePlatformService.saveOrUpdate(jobDetails);
             }
-            final SchedulerDetail schedulerDetail = this.schedularWritePlatformService.retriveSchedulerDetail();
+            final SchedulerDetail schedulerDetail = this.schedularWritePlatformService.retrieveSchedulerDetail();
             if (schedulerDetail.isResetSchedulerOnBootup()) {
                 schedulerDetail.updateSuspendedState(false);
                 this.schedularWritePlatformService.updateSchedulerDetail(schedulerDetail);
@@ -167,7 +167,7 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
 
     @Override
     public void pauseScheduler() {
-        final SchedulerDetail schedulerDetail = this.schedularWritePlatformService.retriveSchedulerDetail();
+        final SchedulerDetail schedulerDetail = this.schedularWritePlatformService.retrieveSchedulerDetail();
         if (!schedulerDetail.isSuspended()) {
             schedulerDetail.updateSuspendedState(true);
             this.schedularWritePlatformService.updateSchedulerDetail(schedulerDetail);
@@ -176,7 +176,7 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
 
     @Override
     public void startScheduler() {
-        final SchedulerDetail schedulerDetail = this.schedularWritePlatformService.retriveSchedulerDetail();
+        final SchedulerDetail schedulerDetail = this.schedularWritePlatformService.retrieveSchedulerDetail();
         if (schedulerDetail.isSuspended()) {
             schedulerDetail.updateSuspendedState(false);
             this.schedularWritePlatformService.updateSchedulerDetail(schedulerDetail);
@@ -245,7 +245,7 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
 
     @Override
     public boolean isSchedulerRunning() {
-        return !this.schedularWritePlatformService.retriveSchedulerDetail().isSuspended();
+        return !this.schedularWritePlatformService.retrieveSchedulerDetail().isSuspended();
     }
 
     /**
