@@ -752,11 +752,13 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
 
     private void validateChargeHasValidSpecifiedDateIfApplicable(final LoanCharge loanCharge, final LocalDate disbursementDate,
             final LocalDate lastRepaymentPeriodDueDate) {
-        if (loanCharge.isSpecifiedDueDate()
-                && !loanCharge.isDueForCollectionFromAndUpToAndIncluding(disbursementDate, lastRepaymentPeriodDueDate)) {
-            final String defaultUserMessage = "This charge with specified due date cannot be added as the it is not in schedule range.";
-            throw new LoanChargeCannotBeAddedException("loanCharge", "specified.due.date.outside.range", defaultUserMessage,
-                    getDisbursementDate(), lastRepaymentPeriodDueDate, loanCharge.name());
+        if (loanCharge.isSpecifiedDueDate()) {
+            LocalDate upToAndInclusive = lastRepaymentPeriodDueDate.plusDays(30); // AltScore allow to add charges after last due date
+            if (!loanCharge.isDueForCollectionFromAndUpToAndIncluding(disbursementDate, upToAndInclusive)) {
+                final String defaultUserMessage = "This charge with specified due date cannot be added as the it is not in schedule range.";
+                throw new LoanChargeCannotBeAddedException("loanCharge", "specified.due.date.outside.range", defaultUserMessage,
+                        getDisbursementDate(), upToAndInclusive, loanCharge.name());
+            }
         }
     }
 
